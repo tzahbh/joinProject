@@ -1,7 +1,8 @@
-const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path")
 const fs = require("fs");
+import express from "express";
+
 var fileupload = require("express-fileupload");
 var router = express.Router();
 
@@ -13,14 +14,14 @@ const filesDic = "files";
 app.use(bodyParser.json());
 
 
-app.get("/ping", (req, res) => {
+app.get("/ping", (req: any, res: any) => {
   res.status(200).send("pong");
 });
 
 app.use(fileupload());
 
 
-app.put("/upload", (req, res) => {
+app.put("/upload", (req: any, res: any) => {
 
   if(!req.files.picture)
     {
@@ -36,7 +37,7 @@ app.put("/upload", (req, res) => {
       res.status(400).send(`File Name ${fileName} Already Exists.`);
   }
   else{
-    file.mv(filePath, function(err) {
+    file.mv(filePath, function(err: any) {
       if (err)
        return res.status(500).send(err);
     });
@@ -44,7 +45,7 @@ app.put("/upload", (req, res) => {
   res.status(201).send(`File Uploaded ${fileName}`);
   });
 
-app.get("/view/:file_name", (req, res) => {
+app.get("/view/:file_name", (req: any, res: any) => {
   const fileName = req.params.file_name ? req.params.file_name : null;
   const filePath = path.resolve(`${filesDic}/${fileName}`)
   if (fs.existsSync(filePath)) { 
