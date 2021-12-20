@@ -15,7 +15,10 @@
     "debug": "pnpm run build:ts:debug && pnpm run debug:watch"
   },
   "dependencies": {
+    "debug": "^4.3.3",
     "express": "^4.17.2",
+    "express-fileupload": "^1.2.1",
+    "path": "^0.12.7",
     "source-map-support": "^0.5.19",
     "tslib": "2.3.0"
   },
