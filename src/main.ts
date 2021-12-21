@@ -2,48 +2,20 @@ const bodyParser = require("body-parser");
 const path = require("path")
 const fs = require("fs");
 import express from "express";
+import {router as uploadRouter} from "./routes/upload"
 
-var fileupload = require("express-fileupload");
-var router = express.Router();
-
+import { ServerConfiguration } from "configuration"
 const app = express();
-const PORT = 8888;
-const filesDic = "files";
-
+const PORT = ServerConfiguration.PORT;
+const filesDic = ServerConfiguration.filesDic;
 
 app.use(bodyParser.json());
-
 
 app.get("/ping", (req: any, res: any) => {
   res.status(200).send("pong");
 });
 
-app.use(fileupload());
-
-
-app.put("/upload", (req: any, res: any) => {
-
-  if(!req.files.picture)
-    {
-        res.status(404).send("File was not found");
-        return;
-    }
-
-  const file = req.files.picture;
-  const fileName = file.name;
-  const filePath = path.resolve(`${filesDic}/${fileName}`)
-
-  if (fs.existsSync(filePath)) { 
-      res.status(400).send(`File Name ${fileName} Already Exists.`);
-  }
-  else{
-    file.mv(filePath, function(err: any) {
-      if (err)
-       return res.status(500).send(err);
-    });
-  }
-  res.status(201).send(`File Uploaded ${fileName}`);
-  });
+app.use("/upload", uploadRouter);
 
 app.get("/view/:file_name", (req: any, res: any) => {
   const fileName = req.params.file_name ? req.params.file_name : null;
