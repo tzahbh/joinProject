@@ -1,23 +1,66 @@
 import express from "express";
-const path = require("path");
-const fs = require("fs");
-var router = express.Router();
-import {ServerConfiguration} from "../configuration"
+import { getFilePathByFileName, parseTransformsOption, customizePicture } from "./utils/viewUtils"
 
-const filesDic = ServerConfiguration.filesDic;
+var router = express.Router();
 
 // View Router
 
 // Service to get picture by file name of picture.
-router.get("/:file_name", (req: any, res: any) => {
-  const fileName = req.params.file_name ? req.params.file_name : null;
-  const filePath = path.resolve(`${filesDic}/${fileName}`)
-  if (fs.existsSync(filePath)) { 
-      res.status(200).download(filePath);
+const viewMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  try{
+  const { file_name: fileName} = req.params;
+
+  if(!fileName)
+    return res.status(400).send("'File Name' Paramater didn't found.");
+
+
+  const filePath = getFilePathByFileName(fileName)
+  
+  if (filePath) {
+      req.file_path = filePath;
+      return next();
   }
-  else{
-      res.status(404).send(`${fileName} is not Found.`);
+  return res.status(404).send(`File Name '${fileName}' is not Found.`);
+}
+catch(err){
+  return res.status(500).send(`Unknown server error.`)
+}
+};
+
+router.get("/:file_name", viewMiddleware, (req: express.Request, res: express.Response) => {
+  try{
+    const filePath = req.file_path
+    res.status(200).download(filePath);
+  }
+  catch(err){
+    res.status(400).send(err);
   }
 });
+
+// Service to get transofrmation of picture by type of transformation and file_name
+router.get("/:transforms_options/:file_name", viewMiddleware, async (req: express.Request, res: express.Response) => {
+  try{
+    const filePath = req.file_path;
+    const transformsOptions = req.params.transforms_options ? req.params.transforms_options : null;
+
+    if (!transformsOptions){
+      return res.status(400).send("Invalid Transforms.");
+    }
+
+    const transformsOptionsParsed = parseTransformsOption(transformsOptions);
+
+    const pictureBuffer = await customizePicture(filePath, transformsOptionsParsed)
+
+    res.type('image/png');
+    return res.status(200).end(pictureBuffer);
+    }
+  catch(err){
+    return res.status(400).send(err);
+  }
+
+});
+
+
+
 
 export { router }
