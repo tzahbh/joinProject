@@ -1,5 +1,6 @@
 import express from "express";
 import { getFilePathByFileName, createTransformer } from "./utils/viewUtils"
+import {ServerCache} from "../configuration"
 
 var router = express.Router();
 
@@ -27,10 +28,23 @@ catch(err){
 }
 };
 
-router.get("/:file_name", viewMiddleware, (req: express.Request, res: express.Response) => {
+router.get("/:file_name", viewMiddleware, async (req: express.Request, res: express.Response) => {
   try{
+    res.type('image/png');
     const filePath = req.file_path
-    res.status(200).download(filePath);
+    const cache_key = `view|${filePath}`
+    
+    // Retrive the results from cache memory (if found).
+    const pictureBufferFromCache = ServerCache.get(cache_key)
+    if (pictureBufferFromCache)
+      return res.status(200).end(pictureBufferFromCache)
+    
+
+    const transformer = createTransformer(filePath);
+    const pictureBuffer = await transformer.getBuffer();
+    ServerCache.set(cache_key, pictureBuffer)
+    
+    res.status(200).end(pictureBuffer);
   }
   catch(err){
     res.status(400).send(err);
@@ -41,24 +55,32 @@ router.get("/:file_name", viewMiddleware, (req: express.Request, res: express.Re
 router.get("/:transforms_options/:file_name", viewMiddleware, async (req: express.Request, res: express.Response) => {
   try{
     const filePath = req.file_path;
-    const transformsOptions = req.params.transforms_options ? req.params.transforms_options : null;
-
+    const { transforms_options: transformsOptions }  = req.params
+    
     if (!transformsOptions){
       return res.status(400).send("Invalid Transforms.");
     }
-
-    const transformer = createTransformer(transformsOptions,filePath);
-    const pictureBuffer = await transformer.getBuffer();
     
     res.type('image/png');
+
+    // Retrive the results from cache memory (if found).
+    const cache_key = `view|${filePath}|${transformsOptions}`
+    const pictureBufferFromCache = ServerCache.get(cache_key)
+    if (pictureBufferFromCache){
+      return res.status(200).end(pictureBufferFromCache)
+    }
+
+    // Calculate the results and store it in the cache memory.
+    const transformer = createTransformer(filePath, transformsOptions);
+    const pictureBuffer = await transformer.getBuffer();
+    ServerCache.set(cache_key, pictureBuffer)
+        
     return res.status(200).end(pictureBuffer);
   }
   catch(err){
     return res.status(400).send(err);
   }
 });
-
-
 
 
 export { router }

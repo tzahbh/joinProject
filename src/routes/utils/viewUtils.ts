@@ -7,51 +7,57 @@ const filesDic = ServerConfiguration.filesDic;
 class Transformer {
 
     // Fields
-    public resize:{
-        height: (height: string) => void;
-        width: (width: string) => void;
-    }
-    public rotate:{
-        angle: (angle: string) => void;
-    }
+    public resize: (resizeParams: {[key: string]: string}) => void;
+    public rotate: (rotateParams: {[key: string]: string}) => void;
 
     private sharpStream: Sharp;
     
     // Constructor
     constructor(filePath: string){
         this.sharpStream = sharp(filePath);
-
-        this.resize = {
-            height: this.handleResizeHeight,
-            width: this.handleResizeWidth
-        }
-        this.rotate = {
-            angle: this.handleRotateAngle
-        }
+        this.resize = this.handleResize
+        this.rotate = this.handleRotate
     }
 
     // Methods
-    private handleResizeHeight = (height: string) => {
-        console.log(height)
-        let heightFloat = <number> parseFloat(height)
-        if (!heightFloat || heightFloat < 0) throw(`The Parameter 'width' should be positive number, given ${heightFloat}`)
-        this.sharpStream.resize({height: heightFloat})
-    }
-    
-    
-    private handleResizeWidth = (width: string) => {
-        let widthFloat = <number> parseFloat(width)
-        if (!widthFloat || widthFloat < 0) throw(`The Parameter 'width' should be positive number, given ${widthFloat}`)
-        this.sharpStream.resize({width: widthFloat})
-    }
 
+    // Resize Handle - Start.
+    private handleResize = (resizeParams: {[key: string]: string}) =>{
+        const resizeOptions = {}
+        const {width, height} = resizeParams
+        if (width) 
+            resizeOptions['width'] = this.handleResizeNumbers(<string> width, 'width')
+        
+        if (height) 
+            resizeOptions['height'] = this.handleResizeNumbers(<string> height, 'height')
+        
+        this.sharpStream.resize(resizeOptions)
+    }
+        //      Resize Parameters Handle - Start.
+    private handleResizeNumbers = (param: string, name: string) => {
+        const paramFloat = <number> parseFloat(param)
+        if (!paramFloat || paramFloat < 0) throw(`The Parameter '${name}' should be positive number, given ${param}`)
+        return paramFloat
+    }
+        //      Resize Parameter Handle - End.
+    // Resize Handle - End.
+
+    // Rotate Handle - Start.
+    private handleRotate = (rotateParams: {[key: string]: string}) => {
+        const { angle } = rotateParams
+        if (angle){
+            const angleHandled = this.handleRotateAngle(angle)
+            this.sharpStream.rotate(angleHandled)
+        }
+    }
+        //      Rotate Parameter Handle - Start.
     private handleRotateAngle = (angle: string) => {
-        console.log(this.sharpStream)
         let angleFloat = parseFloat(angle)
         if (!angleFloat ) throw(`The Parameter 'angle' should be number, given ${angleFloat}`)
-        this.sharpStream.rotate(angleFloat)
+        return angleFloat
     }
-
+        //      Rotate Parameter Handle - End.
+    // Rotate Handle - End
 
     public async getBuffer(){
         return(
@@ -65,8 +71,6 @@ class Transformer {
 
 function getFilePathByFileName(fileName: string){
     if (fileName.includes('/') || fileName.includes("\\")){
-        console.log("\\")
-        console.log(fileName)
         return null;
     }
     const filePath = path.resolve(`${filesDic}/${fileName}`)
@@ -76,8 +80,8 @@ function getFilePathByFileName(fileName: string){
 function getTransformDescriber(){
     return ({
         resize:{
-            height: 200,
-            width: 200,
+            height: 'number',
+            width: 'number',
         },
         rotate:{
             angle: 0
@@ -89,7 +93,7 @@ function parseTransformInstruction(transformsInstructionText: string){
     const transformsInstructionsList = transformsInstructionText.split(";");
     const availableTransform = getTransformDescriber();
 
-    var transformsInstructionParsed = {}
+    const transformsInstructionParsed = {}
 
     transformsInstructionsList.forEach(transformInstruction => {
         // For Each Transform Instruction Extract Transform Name & Transform Parameters.
@@ -131,16 +135,14 @@ function parseTransformInstruction(transformsInstructionText: string){
     return transformsInstructionParsed
 }
 
-function createTransformer(transformsInstructionText: string, filePath: string){
+function createTransformer(filePath: string, transformsInstructionText?: string){
     var transformer = new Transformer(filePath);
-    const transformsInstructionParsed: Object = parseTransformInstruction(transformsInstructionText);
     
-    for (const transformName in transformsInstructionParsed) {
-        for ( const parameterName in transformsInstructionParsed[transformName]) {
-
-            const parameterValue = transformsInstructionParsed[transformName][parameterName]
-            transformer[transformName][parameterName](parameterValue)
-        }
+    if (transformsInstructionText) {
+        const transformsInstructionParsed: Object = parseTransformInstruction(transformsInstructionText);
+        
+        Object.keys(transformsInstructionParsed).map((transformName)=>
+            transformer[transformName](transformsInstructionParsed[transformName]))
     }
     
     return transformer

@@ -19,7 +19,8 @@ router.put("/", async (req: express.Request, res: express.Response) => {
     const { picture: file } = req.files
     
     // Checking if file has been sent.
-    if(!file) return res.status(404).send("File was not sended.");
+    if(!file) 
+      return res.status(404).send("File was not sended.");
       
     const fileName = file['name'];
     const savingFileFunc = file['mv'];
@@ -28,22 +29,16 @@ router.put("/", async (req: express.Request, res: express.Response) => {
     // Checking if file Already Exists.
     try{
       await fs.promises.access(filePath);
-    }
-    catch(err) {
       return res.status(400).send(`File Name ${fileName} Already Exists.`);
     }
-
-    // Saving the file.
-    const isFileSaved = await savingFileFunc(filePath, function(err: Error) {
-        return err ? false : true
-      });
-
-    if (!isFileSaved){
-      throw(`File ${fileName} Didn't Uploaded. Somthing went wrong.`)
-    }
-
-    return res.status(201).send(`File ${fileName} Uploaded Successfuly.`);
+    catch(e) {
+      // File is not exists - Saving the file.
+      await savingFileFunc(filePath, function(err: Error) {
+          return err ? res.status(400).send("Somthing went wrong, Please try later.") : null;
+      })
       
+      return res.status(201).send(`File ${fileName} Uploaded Successfuly.`);
+    }  
   }
   catch(err){
     return res.status(400).send(err) 
