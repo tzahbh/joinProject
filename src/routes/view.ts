@@ -1,5 +1,5 @@
 import express from "express";
-import { getFilePathByFileName, parseTransformsOption, customizePicture } from "./utils/viewUtils"
+import { getFilePathByFileName, createTransformer } from "./utils/viewUtils"
 
 var router = express.Router();
 
@@ -47,17 +47,15 @@ router.get("/:transforms_options/:file_name", viewMiddleware, async (req: expres
       return res.status(400).send("Invalid Transforms.");
     }
 
-    const transformsOptionsParsed = parseTransformsOption(transformsOptions);
-
-    const pictureBuffer = await customizePicture(filePath, transformsOptionsParsed)
-
+    const transformer = createTransformer(transformsOptions,filePath);
+    const pictureBuffer = await transformer.getBuffer();
+    
     res.type('image/png');
     return res.status(200).end(pictureBuffer);
-    }
+  }
   catch(err){
     return res.status(400).send(err);
   }
-
 });
 
 

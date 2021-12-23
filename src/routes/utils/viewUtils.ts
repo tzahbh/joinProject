@@ -1,48 +1,67 @@
 import {ServerConfiguration} from "../../configuration"
-import sharp from "sharp";
+import sharp, { Sharp } from "sharp";
 import path from "path";
-import fs from "fs";
-import { kill } from "process";
 
 const filesDic = ServerConfiguration.filesDic;
 
-class TransformsOption {
-    public resize?:{
-        height: number
-        width: number
+class Transformer {
+
+    // Fields
+    public resize:{
+        height: (height: string) => void;
+        width: (width: string) => void;
     }
-    public rotate?:{
-        angle: number
+    public rotate:{
+        angle: (angle: string) => void;
     }
+
+    private sharpStream: Sharp;
     
-    private addParameter(transformName: string, parameters: {[key: string]: string}){
-        const {width, height, angle} = parameters
-        if (width){
-            let widthFloat = parseFloat(width)
-            if (!widthFloat || widthFloat < 0) throw(`The Parameter 'width' should be positive number, given ${widthFloat}`)
-            this[transformName].width = widthFloat
+    // Constructor
+    constructor(filePath: string){
+        this.sharpStream = sharp(filePath);
+
+        this.resize = {
+            height: this.handleResizeHeight,
+            width: this.handleResizeWidth
         }
-        if (height){
-            let heightFloat = parseFloat(height)
-            if (!heightFloat || heightFloat < 0) throw(`The Parameter 'width' should be positive number, given ${heightFloat}`)
-            this[transformName].height = heightFloat
-        }
-        if (angle){
-            let angleFloat = parseFloat(angle)
-            if (!angleFloat ) throw(`The Parameter 'angle' should be number, given ${angleFloat}`)
-            this[transformName].angle = angleFloat
+        this.rotate = {
+            angle: this.handleRotateAngle
         }
     }
 
-    public addTransform(transformName: string, parameters: {[key: string]: string}) {
-        if (transformName in this && typeof this[transformName] === 'object'){
-            this.addParameter(transformName, parameters)
-        }
-        else{
-            throw(`The Transform '${transformName}' isn't available.`);
-        }
-  } 
+    // Methods
+    private handleResizeHeight = (height: string) => {
+        console.log(height)
+        let heightFloat = <number> parseFloat(height)
+        if (!heightFloat || heightFloat < 0) throw(`The Parameter 'width' should be positive number, given ${heightFloat}`)
+        this.sharpStream.resize({height: heightFloat})
+    }
+    
+    
+    private handleResizeWidth = (width: string) => {
+        let widthFloat = <number> parseFloat(width)
+        if (!widthFloat || widthFloat < 0) throw(`The Parameter 'width' should be positive number, given ${widthFloat}`)
+        this.sharpStream.resize({width: widthFloat})
+    }
+
+    private handleRotateAngle = (angle: string) => {
+        console.log(this.sharpStream)
+        let angleFloat = parseFloat(angle)
+        if (!angleFloat ) throw(`The Parameter 'angle' should be number, given ${angleFloat}`)
+        this.sharpStream.rotate(angleFloat)
+    }
+
+
+    public async getBuffer(){
+        return(
+            await this.sharpStream
+            .webp()
+            .toBuffer()
+        );
+    }
 }
+
 
 function getFilePathByFileName(fileName: string){
     if (fileName.includes('/') || fileName.includes("\\")){
@@ -54,7 +73,7 @@ function getFilePathByFileName(fileName: string){
     return filePath;
 }
 
-function getAvailableTransforms(){
+function getTransformDescriber(){
     return ({
         resize:{
             height: 200,
@@ -66,12 +85,13 @@ function getAvailableTransforms(){
     })
 }
 
+function parseTransformInstruction(transformsInstructionText: string){
+    const transformsInstructionsList = transformsInstructionText.split(";");
+    const availableTransform = getTransformDescriber();
 
-function parseTransformsOption(transformsText: string){
-    const transformsInstructions = transformsText.split(";")
-    const availableTransform = getAvailableTransforms()
-    var transformsInstructionsParsed = new TransformsOption();
-    transformsInstructions.forEach(transformInstruction => {
+    var transformsInstructionParsed = {}
+
+    transformsInstructionsList.forEach(transformInstruction => {
         // For Each Transform Instruction Extract Transform Name & Transform Parameters.
         const transform = transformInstruction.split(':')
         if (transform.length != 2){
@@ -82,9 +102,8 @@ function parseTransformsOption(transformsText: string){
 
         // Allowing only available Transformers
         if (transformName in availableTransform){
-            transformsInstructionsParsed[transformName] = {}
+            transformsInstructionParsed[transformName] = {}
             const transformParameters = transformParametersText.split(',')
-            var parametersParsed = {}
             transformParameters.forEach(parameterText =>{
                 
                 const parameter = parameterText.split('=')
@@ -95,32 +114,37 @@ function parseTransformsOption(transformsText: string){
 
                 const parameterName = parameter[0]
                 const parameterValue = parameter[1]
+
                 // Allowing only available Paramaters.
                 if (parameterName in availableTransform[transformName]){
-                    parametersParsed[parameterName] = parameterValue
+                    transformsInstructionParsed[transformName][parameterName] = parameterValue
                 }
                 else{
                     throw(`The Transform Paramater '${parameterName}' isn't available in '${transformName}'`)
                 }
             })
-            transformsInstructionsParsed.addTransform(transformName, parametersParsed)
-
         }
         else{
             throw(`The Transform '${transformName}' isn't available.`);
         }
-        
     })
-    return transformsInstructionsParsed
+    return transformsInstructionParsed
 }
 
-async function customizePicture(picPath: string, transformsOption: TransformsOption){
-    const pictureBuffer = await sharp(picPath)
-    .resize('resize' in transformsOption ? transformsOption['resize'] : {})
-    .rotate('rotate' in transformsOption ? transformsOption['rotate']['angle'] : null)
-    .webp()
-    .toBuffer();
-    return pictureBuffer;
+function createTransformer(transformsInstructionText: string, filePath: string){
+    var transformer = new Transformer(filePath);
+    const transformsInstructionParsed: Object = parseTransformInstruction(transformsInstructionText);
+    
+    for (const transformName in transformsInstructionParsed) {
+        for ( const parameterName in transformsInstructionParsed[transformName]) {
+
+            const parameterValue = transformsInstructionParsed[transformName][parameterName]
+            transformer[transformName][parameterName](parameterValue)
+        }
+    }
+    
+    return transformer
 }
 
-export { getFilePathByFileName, parseTransformsOption, customizePicture}
+
+export { getFilePathByFileName, createTransformer, Transformer}
