@@ -144,7 +144,7 @@ function createTransformer(filePath: string, transformsInstructionText?: string)
         Object.keys(transformsInstructionParsed).map((transformName)=>
             transformer[transformName](transformsInstructionParsed[transformName]))
     }
-    
+
     return transformer
 }
 

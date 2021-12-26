@@ -36,7 +36,7 @@ router.put("/", async (req: express.Request, res: express.Response) => {
       await savingFileFunc(filePath, function(err: Error) {
           return err ? res.status(400).send("Somthing went wrong, Please try later.") : null;
       })
-      
+
       return res.status(201).send(`File ${fileName} Uploaded Successfuly.`);
     }  
   }

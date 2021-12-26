@@ -33,7 +33,7 @@ router.get("/:file_name", viewMiddleware, async (req: express.Request, res: expr
     res.type('image/png');
     const filePath = req.file_path
     const cache_key = `view|${filePath}`
-    
+
     // Retrive the results from cache memory (if found).
     const pictureBufferFromCache = ServerCache.get(cache_key)
     if (pictureBufferFromCache)
