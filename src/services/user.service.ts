@@ -14,7 +14,7 @@ class UserService {
     
   }
 
-  async login(input: LoginInput, context: Context) {
+  async login(input: LoginInput, context?: Context) {
     const e = "User or Password doesn't match.";
 
     // Get our user by phone
@@ -34,13 +34,14 @@ class UserService {
     const token = signJwt(user);
 
     // set a cookie for the jwt
-    context.res.cookie("accessToken", token, {
-      maxAge: 3.154e10, // 1 year
-      httpOnly: true,
-      domain: "localhost",
-      path: "/",
-      sameSite: "strict",
-    });
+    // context.res.header("x-token", token);
+    // context.res.headers("accessToken", token, {
+    //   maxAge: 3.154e10, // 1 year
+    //   httpOnly: true,
+    //   domain: "localhost",
+    //   path: "/",
+    //   sameSite: "strict",
+    // });
 
     return token;
   }
