@@ -69,10 +69,10 @@ export class CreateUserInput {
     @Field(() => String)
     phone: string;
   
-    @MinLength(10, {
+    @MinLength(4, {
         message: "password must be at least 4 characters long",
     })
-    @MaxLength(10, {
+    @MaxLength(12, {
         message: "password must not be longer than 50 characters",
     })
     @Field(() => String)
