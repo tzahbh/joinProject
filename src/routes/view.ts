@@ -1,10 +1,19 @@
 import express from "express";
 import { getFilePathByFileName, createTransformer } from "./utils/viewUtils"
-import {ServerCache} from "../configuration"
+import {ServerCache} from "../utils/cache"
 
 var router = express.Router();
 
 // View Router
+// Middleware for authorization
+router.use((req: express.Request, res: express.Response, next: express.NextFunction)=>{
+  if (req.user) { 
+    return(next()); 
+  }
+  else {
+    res.status(403).send("Unauthorized.")
+  }
+})
 
 // Service to get picture by file name of picture.
 const viewMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {

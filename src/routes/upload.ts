@@ -1,14 +1,21 @@
 import express from "express";
 import fs from "fs";
 import fileupload from "express-fileupload";
-import {ServerConfiguration} from "../configuration"
 import { getFilePathByFileName } from "./utils/viewUtils";
 
 var router = express.Router();
 
-const filesDic = ServerConfiguration.filesDic;
-
 // Upload Router
+
+// Middleware for authorization
+router.use((req: express.Request, res: express.Response, next: express.NextFunction)=>{
+  if (req.user) { 
+    return(next()); 
+  }
+  else {
+    res.status(403).send("Unauthorized.")
+  }
+})
 
 // Middleware to upload files
 router.use(fileupload());
