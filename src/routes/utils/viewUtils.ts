@@ -1,8 +1,8 @@
-import {ServerConfiguration} from "../../configuration"
 import sharp, { Sharp } from "sharp";
 import path from "path";
+import config from "config";
 
-const filesDic = ServerConfiguration.filesDic;
+const filesDic = config.get<string>("filesDic");
 
 class Transformer {
 

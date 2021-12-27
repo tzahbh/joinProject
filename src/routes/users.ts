@@ -34,7 +34,7 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
 
   router.post("/valid", async (req: express.Request, res: express.Response) => {
     try{;
-      const {accessToken} = req.cookies
+      const accessToken = <string> req.headers['x-token']
       const user = verifyJwt(accessToken)
       if (!user){
         return res.status(400).send("Unvalid.")
