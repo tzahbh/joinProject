@@ -1,8 +1,4 @@
 import sharp, { Sharp } from "sharp";
-import path from "path";
-import config from "config";
-
-const filesDic = config.get<string>("filesDic");
 
 class Transformer {
 
@@ -66,15 +62,6 @@ class Transformer {
             .toBuffer()
         );
     }
-}
-
-
-function getFilePathByFileName(fileName: string){
-    if (fileName.includes('/') || fileName.includes("\\")){
-        return null;
-    }
-    const filePath = path.resolve(`${filesDic}/${fileName}`)
-    return filePath;
 }
 
 function getTransformDescriber(){
@@ -149,4 +136,4 @@ function createTransformer(filePath: string, transformsInstructionText?: string)
 }
 
 
-export { getFilePathByFileName, createTransformer, Transformer}
+export { createTransformer, Transformer}
