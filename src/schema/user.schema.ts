@@ -10,6 +10,7 @@ import {
   import { Field, InputType, ObjectType } from "type-graphql";
   import bcrypt from "bcrypt";
 import { MaxLength, MinLength , Length} from "class-validator";
+import {ObjectId} from "bson"
 
 
   function findByPhone(
@@ -42,7 +43,7 @@ import { MaxLength, MinLength , Length} from "class-validator";
 @ObjectType()
 export class User {
     @Field(() => String)
-    _id: string;
+    _id: ObjectId;
 
     @Field(() => String)
     @prop({ required: true })

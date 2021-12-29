@@ -1,6 +1,5 @@
 import bcrypt from "bcrypt";
 import { CreateUserInput, LoginInput, UserModel } from "../schema/user.schema";
-import Context from "../types/context";
 import { signJwt } from "../utils/jwt";
 
 class UserService {
@@ -14,7 +13,7 @@ class UserService {
     
   }
 
-  async login(input: LoginInput, context?: Context) {
+  async login(input: LoginInput) {
     const e = "User or Password doesn't match.";
 
     // Get our user by phone
@@ -30,19 +29,7 @@ class UserService {
       throw (e)
     }
 
-    // sign a jwt
     const token = signJwt(user);
-
-    // set a cookie for the jwt
-    // context.res.header("x-token", token);
-    // context.res.headers("accessToken", token, {
-    //   maxAge: 3.154e10, // 1 year
-    //   httpOnly: true,
-    //   domain: "localhost",
-    //   path: "/",
-    //   sameSite: "strict",
-    // });
-
     return token;
   }
 }
