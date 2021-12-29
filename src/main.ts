@@ -6,7 +6,6 @@ import authChecker from "./utils/authChecker";
 import {ApolloServer} from "apollo-server-express";
 import bodyParser from "body-parser";
 import express from "express";
-import cookieParser from "cookie-parser";
 import {router as uploadRouter} from "./routes/upload";
 import {router as viewRouter} from "./routes/view";
 import {router as userRouter} from "./routes/users";
@@ -39,13 +38,12 @@ async function bootstrap() {
 const server = new ApolloServer({
     schema,
     context: (ctx: Context) => {
-      const context = ctx;
-
-      if (ctx.req.cookies.accessToken) {
-        const user = verifyJwt<User>(ctx.req.cookies.accessToken);
-        context.user = user;
+      const token = <string> ctx.req.headers['x-token']
+      if (token) {
+        const user = verifyJwt<User>(token);
+        ctx.user = user;
       }
-      return context;
+      return ctx;
     },
     plugins: [
       ApolloServerPluginLandingPageGraphQLPlayground(),
@@ -56,7 +54,6 @@ const server = new ApolloServer({
   server.applyMiddleware({ app });
 
   app.use(bodyParser.json());
-  // app.use(cookieParser());
 
   app.use((req: express.Request, res: express.Response, next: express.NextFunction)=>{
     const token = <string> req.headers['x-token']
