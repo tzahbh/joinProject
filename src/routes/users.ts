@@ -10,7 +10,7 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
   try{
     const { phone, password } = req.body;
     const userService = new UserService();
-    const authToken = await userService.login({phone: phone, password: password},{req: req, res: res, user: null});
+    const authToken = await userService.login({phone: phone, password: password});
     return res.status(200).send(authToken)
   }
   catch(err){

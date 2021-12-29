@@ -1,6 +1,10 @@
 import express from "express";
-import { getFilePathByFileName, createTransformer } from "./utils/viewUtils"
+import { createTransformer } from "../utils/sharp"
+import { getFilePathByFileName } from "../utils/files"
+import LogService from "../services/log.service"
+import { LogEventType } from "../schema/log.schema"
 import {ServerCache} from "../utils/cache"
+import { User } from "schema/user.schema";
 
 var router = express.Router();
 
@@ -40,31 +44,50 @@ catch(err){
 router.get("/:file_name", viewMiddleware, async (req: express.Request, res: express.Response) => {
   try{
     res.type('image/png');
+    const { file_name: fileName } = req.params
     const filePath = req.file_path
-    const cache_key = `view|${filePath}`
+    const operationKey = `view|${fileName}`
+
+    let pictureBuffer = null;
+
+    // Log Deatils, Saved only if operation successed.
+    const user = <User> req.user
+    const log = {event: LogEventType.view, description: operationKey, date: Date(), user: user._id}
+    
 
     // Retrive the results from cache memory (if found).
-    const pictureBufferFromCache = ServerCache.get(cache_key)
-    if (pictureBufferFromCache)
-      return res.status(200).end(pictureBufferFromCache)
+    const pictureBufferFromCache = ServerCache.get(operationKey)
+    console.log(pictureBufferFromCache)
+    if (pictureBufferFromCache){
+      pictureBuffer = pictureBufferFromCache;
+    }
+    else{
+      const transformer = createTransformer(filePath);
+      pictureBuffer = await transformer.getBuffer();
+      ServerCache.set(operationKey, pictureBuffer); // store in cache.
+    } 
     
-
-    const transformer = createTransformer(filePath);
-    const pictureBuffer = await transformer.getBuffer();
-    ServerCache.set(cache_key, pictureBuffer)
-    
-    res.status(200).end(pictureBuffer);
+    LogService.createLog(log); // save log.
+    return res.status(200).end(pictureBuffer);
   }
   catch(err){
-    res.status(400).send(err);
+    return res.status(400).send(err);
   }
 });
 
 // Service to get transofrmation of picture by type of transformation and file_name
-router.get("/:transforms_options/:file_name", viewMiddleware, async (req: express.Request, res: express.Response) => {
+router.get("/:transforms_options/:file_name", viewMiddleware, async (req: express.Request, res: express.Response) => {  
   try{
+    const {file_name: fileName} = req.params
     const filePath = req.file_path;
     const { transforms_options: transformsOptions }  = req.params
+    const operationKey = `view|${fileName}|${transformsOptions}`
+
+    let pictureBuffer = null;
+
+    // Log Deatils, Saved only if operation successed.
+    const user = <User> req.user
+    const log = {event: LogEventType.transform_view, description: operationKey, date: Date(), user: user._id}
     
     if (!transformsOptions){
       return res.status(400).send("Invalid Transforms.");
@@ -73,23 +96,22 @@ router.get("/:transforms_options/:file_name", viewMiddleware, async (req: expres
     res.type('image/png');
 
     // Retrive the results from cache memory (if found).
-    const cache_key = `view|${filePath}|${transformsOptions}`
-    const pictureBufferFromCache = ServerCache.get(cache_key)
+    const pictureBufferFromCache = ServerCache.get(operationKey)
     if (pictureBufferFromCache){
-      return res.status(200).end(pictureBufferFromCache)
+      pictureBuffer = pictureBufferFromCache
+    }
+    else{
+      const transformer = createTransformer(filePath, transformsOptions);
+      pictureBuffer = await transformer.getBuffer();
+      ServerCache.set(operationKey, pictureBuffer); // store it in the cache memory.
     }
 
-    // Calculate the results and store it in the cache memory.
-    const transformer = createTransformer(filePath, transformsOptions);
-    const pictureBuffer = await transformer.getBuffer();
-    ServerCache.set(cache_key, pictureBuffer)
-        
+    LogService.createLog(log)
     return res.status(200).end(pictureBuffer);
   }
   catch(err){
     return res.status(400).send(err);
   }
 });
-
 
 export { router }
