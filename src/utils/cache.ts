@@ -1,4 +1,3 @@
-import NodeCache from "node-cache";
 import LRU from "lru-cache"
 
 const myCache = new LRU({ max: 1000, maxAge: 1000 * 60 * 30}) // 1000ms = 1 second, total 30 minutes to live.
@@ -13,14 +12,4 @@ abstract class ServerCache{
   }
 
 }
-
-abstract class ServerConfiguration {
-  public static get filesDic(){
-    return "files";
-  } 
-	public static get PORT(){
-    return 8888;
-  }
-}
-
-export { ServerConfiguration, ServerCache };
+export { ServerCache };

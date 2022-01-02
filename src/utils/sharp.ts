@@ -1,8 +1,4 @@
-import {ServerConfiguration} from "../../configuration"
 import sharp, { Sharp } from "sharp";
-import path from "path";
-
-const filesDic = ServerConfiguration.filesDic;
 
 class Transformer {
 
@@ -66,15 +62,6 @@ class Transformer {
             .toBuffer()
         );
     }
-}
-
-
-function getFilePathByFileName(fileName: string){
-    if (fileName.includes('/') || fileName.includes("\\")){
-        return null;
-    }
-    const filePath = path.resolve(`${filesDic}/${fileName}`)
-    return filePath;
 }
 
 function getTransformDescriber(){
@@ -141,12 +128,12 @@ function createTransformer(filePath: string, transformsInstructionText?: string)
     if (transformsInstructionText) {
         const transformsInstructionParsed: Object = parseTransformInstruction(transformsInstructionText);
         
-        Object.keys(transformsInstructionParsed).map((transformName)=>
+        Object.keys(transformsInstructionParsed).forEach((transformName)=>
             transformer[transformName](transformsInstructionParsed[transformName]))
     }
-    
+
     return transformer
 }
 
 
-export { getFilePathByFileName, createTransformer, Transformer}
+export { createTransformer, Transformer}

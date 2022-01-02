@@ -1,6 +1,9 @@
-
 declare namespace Express {
-	export interface Request {
-      file_path?: string
+	interface Request {
+            file_path?: string
+            user?: Object
+            operationKey?: string
      }
 }
+
+
