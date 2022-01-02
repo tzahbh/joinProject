@@ -9,8 +9,7 @@ var router = express.Router();
 router.post("/login", async (req: express.Request, res: express.Response) => {
   try{
     const { phone, password } = req.body;
-    const userService = new UserService();
-    const authToken = await userService.login({phone: phone, password: password});
+    const authToken = await UserService.login({phone: phone, password: password});
     return res.status(200).send(authToken)
   }
   catch(err){
@@ -22,8 +21,7 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
   router.post("/register", async (req: express.Request, res: express.Response) => {
     try{
       const { phone, name, password} = req.body;
-      const userService = new UserService();
-      const user = await userService.createUser({name: name, password: password, phone: phone})
+      const user = await UserService.createUser({name: name, password: password, phone: phone})
       return res.status(201).send({phone: user.phone, name: user.name})
     }
     catch(err){

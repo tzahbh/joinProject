@@ -128,7 +128,7 @@ function createTransformer(filePath: string, transformsInstructionText?: string)
     if (transformsInstructionText) {
         const transformsInstructionParsed: Object = parseTransformInstruction(transformsInstructionText);
         
-        Object.keys(transformsInstructionParsed).map((transformName)=>
+        Object.keys(transformsInstructionParsed).forEach((transformName)=>
             transformer[transformName](transformsInstructionParsed[transformName]))
     }
 

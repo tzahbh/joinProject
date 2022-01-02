@@ -3,17 +3,16 @@ import { CreateUserInput, LoginInput, UserModel } from "../schema/user.schema";
 import { signJwt } from "../utils/jwt";
 
 class UserService {
-  async createUser(input: CreateUserInput) {
+  static async createUser(input: CreateUserInput) {
     const {phone} = input;
     const userWithInputPhone = await UserModel.find().findByPhone(phone).lean();
     if (userWithInputPhone){
       throw ("Phone Number Already Exists.")
     }
-    return UserModel.create(input);
-    
+    return UserModel.create(input);    
   }
 
-  async login(input: LoginInput) {
+  static async login(input: LoginInput) {
     const e = "User or Password doesn't match.";
 
     // Get our user by phone

@@ -6,18 +6,14 @@ import Context from "types/context";
 @Resolver()
 export default class UserResolver {
 
-    constructor(private userService: UserService) {
-        this.userService = new UserService();
-    }
-
     @Mutation(() => User)
     createUser(@Arg("input") input: CreateUserInput) {
-      return this.userService.createUser(input);
+      return UserService.createUser(input);
     }
   
     @Query(() => String) //
     login(@Arg("input") input: LoginInput) {
-      return this.userService.login(input);
+      return UserService.login(input);
     }
 
     @Query(()=> User, { nullable: true })

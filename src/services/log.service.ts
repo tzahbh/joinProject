@@ -6,7 +6,7 @@ class LogService {
   }
 
   static async getLogs(input: getLogInput) {
-    const {event, date, user_id} = input
+    const { event } = input
     if (event) {
       return LogModel.find().findByLogEventType(event);
     }

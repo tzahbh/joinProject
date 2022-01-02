@@ -1,4 +1,4 @@
-import { PictureModel, CreatePictureInput } from "schema/picture.schema";
+import { PictureModel, CreatePictureInput } from "../schema/picture.schema";
 
 class PictureService {
 

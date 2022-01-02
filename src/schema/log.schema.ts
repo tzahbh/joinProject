@@ -13,7 +13,6 @@ import {ObjectId} from "bson"
 
 export enum LogEventType {
   "view" = "view",
-  "transform_view" = "transform_view",
   "upload" = "upload",
   "delete" = "delete"
  }
@@ -58,13 +57,14 @@ export class Log {
 export const LogModel = getModelForClass<typeof Log, QueryHelpers>(Log);
 
 export class CreateLogInput {
-    @IsEnum(LogEventType)
-    event: LogEventType;
+    
+  @IsEnum(LogEventType)
+  event: LogEventType;
   
-    @IsDate()
-    date: string;
-    user: ObjectId;
-    description: string;
+  @IsDate()
+  date: string;
+  user: ObjectId;
+  description: string;
 }
 
 export class getLogInput {
