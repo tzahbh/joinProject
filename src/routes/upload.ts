@@ -1,5 +1,4 @@
 import express from "express";
-import fs from "fs";
 import fileupload from "express-fileupload";
 import { getFilePathByFileName, isFileExists, saveFile } from "../utils/files";
 import { User } from "schema/user.schema";
@@ -29,7 +28,7 @@ router.use(fileupload());
 router.put("/", async (req: express.Request, res: express.Response) => {
   try{
     const { picture: file } = req.files
-    
+    console.log("here i am")
     // Checking if file has been sent.
     if(!file) 
       return res.status(404).send("File was not sended.");
@@ -37,7 +36,7 @@ router.put("/", async (req: express.Request, res: express.Response) => {
     const buffer = file['data']
     const fileName = file['name'];
     const filePath = getFilePathByFileName(fileName)
-
+    console.log(`FileName: ${fileName}, data: ${buffer}`)
     // Log Deatils, Saved only if operation successed.
     const user = <User> req.user
     const log = {event: LogEventType.upload, description: fileName, date: Date(), user: new ObjectId(user._id)}

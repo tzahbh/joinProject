@@ -1,15 +1,16 @@
 import { getFilePathByFileName, isFileExists, deletePicture, saveFile } from "../../src/utils/files"
 
-describe("src/utils/files.ts", () => {
-    beforeAll(async () => {
-        const TestFileName = "test1.jpg"
-        const filePath = getFilePathByFileName(TestFileName)
-        await saveFile(filePath,new Buffer("Test1"));
-      });
+beforeAll(async () => {
+    const TestFileName = "test1.jpg"
+    const filePath = getFilePathByFileName(TestFileName)
+    await saveFile(filePath, Buffer.from("Test1"));
+  });
 
-    afterAll(async () => {
-        await deletePicture("test1.jpg")       
-    })
+afterAll(async () => {
+    await deletePicture("test1.jpg")       
+})
+
+describe("src/utils/files.ts", () => {  
 
     it("getFilePathByFileName - Redirect To Another Directory", async () => {
         expect.assertions(1);
@@ -46,7 +47,7 @@ describe("src/utils/files.ts", () => {
         try{
         const fileName = "test2.jpg";
         const filePath = getFilePathByFileName(fileName);
-        const demoBuffer = new Buffer("test");
+        const demoBuffer = Buffer.from("test");
         await saveFile(filePath, demoBuffer);
         const result = await isFileExists(filePath);
         expect(result).toBe(true);

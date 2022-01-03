@@ -13,11 +13,12 @@
     "debug:serve": "LOG_LEVEL=debug nodemon --config ./nodemon.json  --inspect=127.0.0.1:9249 dist/main.js",
     "debug:watch": "concurrently --handle-input -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"green.bold\" \"pnpm run watch:ts\" \"pnpm run debug:serve\"",
     "debug": "pnpm run build:ts:debug && pnpm run debug:watch",
-    "test": "jest"
+    "test": "NODE_ENV= jest"
   },
   "dependencies": {
     "@typegoose/typegoose": "^9.2.0",
     "apollo-server-express": "^3.5.0",
+    "axios": "^0.24.0",
     "bcrypt": "^5.0.1",
     "class-validator": "^0.13.2",
     "config": "^3.3.6",
